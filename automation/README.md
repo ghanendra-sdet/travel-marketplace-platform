@@ -2,7 +2,11 @@
 
 > Automated scenarios trace directly to [`../regression-checklist.md`](../regression-checklist.md)
 > sections 2–3 (fare lock/booking + overbooking prevention). See
-> [`../docs/README.md`](../docs/README.md) for the full documentation map.
+> [`../docs/README.md`](../docs/README.md) for the full documentation map,
+> [`../docs/architecture-and-flow.md`](../docs/architecture-and-flow.md) section 5 for the exact
+> race condition the k6 script below is built to catch (with a full sequence diagram), and
+> [`../docs/tech-and-skills.md`](../docs/tech-and-skills.md) section 5 for a worked, illustrative
+> version of that k6 script plus the full load/spike/soak testing approach.
 
 Automation for the search-to-booking journey, built with **Cypress + JavaScript**, backed by
 Postman API coverage and k6 for load/concurrency scenarios.

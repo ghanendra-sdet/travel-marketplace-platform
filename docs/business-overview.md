@@ -14,16 +14,27 @@ interface — instead of checking each supplier's own site individually. The pla
 reconciling **real-time, third-party inventory and pricing** (which it doesn't own or control)
 into a single trustworthy booking experience.
 
-## 2. Core Modules
+## 2. Core Modules and Their Submodules
 
-- **Search & Discovery** — flight/hotel/package search with filters (dates, price, class, rating)
-- **Fare/Rate Engine** — real-time pricing pulled from supplier inventory systems
-- **Booking Engine** — fare lock/hold, seat/room reservation, booking confirmation, PNR generation
-- **Payment & Refunds** — payment collection and tiered refund processing on cancellation
-- **Itinerary Management** — the traveler's view of their own bookings, e-tickets, and vouchers
-- **Cancellation & Refund Policy Engine** — applies fare-type-specific refund rules
-- **Supplier/Inventory Management** — onboarding travel partners and integrating their rate/
-  inventory feeds
+Each module below is broken into its actual submodules/components — the level of detail a test
+plan or automation suite needs, not just a one-line label. The last column names which skill
+category (see [`tech-and-skills.md`](./tech-and-skills.md)) is the primary way that module gets
+tested.
+
+| Module | Submodules / Key Components | Responsible For | Primarily Tested Via |
+|---|---|---|---|
+| **Search & Discovery** | Flight Search · Hotel Search · Package Search · Filter/Sort Engine · Results Cache | Querying live supplier inventory and returning results matching traveler-applied filters, without ever presenting stale/cached data as current | UI Automation + API Testing |
+| **Fare/Rate Engine** | Live Price Aggregation · Rate Parity Check · Currency/Tax Display Formatting | Pulling real-time pricing from supplier systems and presenting it consistently (see [`ui-consistency.md`](./ui-consistency.md)) | API Testing |
+| **Booking Engine** | Fare Lock/Hold Service · Seat/Room Reservation · PNR Generator · Booking Confirmation | The core transactional path — see [`architecture-and-flow.md`](./architecture-and-flow.md) sections 3–5 for exactly how this module prevents stale pricing and overbooking | API Testing + Performance/Concurrency Testing |
+| **Payment & Refunds** | Payment Collection · Payment Gateway Adapter · Refund Disbursement | Charging exactly the fare-locked price, and disbursing exactly the quoted refund amount — no discrepancy either direction | API Testing |
+| **Itinerary Management** | Booking History · E-ticket/Voucher Delivery · Modify/Cancel Actions | The traveler's ongoing view of their own bookings after confirmation | UI Automation |
+| **Cancellation & Refund Policy Engine** | Fare-Type Rule Matrix · Refund Quote Calculator · Policy Tier Lookup | Applying the correct fare-type-specific refund rule and quoting it accurately before the traveler confirms (section 6 of `architecture-and-flow.md`) | API Testing + Functional Testing |
+| **Supplier/Inventory Management** | Supplier Onboarding · Inventory Feed Integration (GDS-style, see section 6 below) · Feed Health Monitoring | Bringing travel partners onto the platform and keeping their rate/inventory feeds live and trustworthy — an Admin/Ops-facing module, not traveler-facing | Functional Testing (Admin) |
+
+**Why the Fare Lock/Hold Service is called out inside Booking Engine specifically, rather than
+treated as an implementation detail:** per section 6 below, it's the single most load-bearing
+internal dependency in the platform — it's the one component both of the platform's core
+guarantees (no stale pricing, no overbooking) actually run through.
 
 ## 3. Core Flow
 
@@ -68,7 +79,16 @@ traveler charged a stale price, or a confirmed booking that the supplier later c
 
 - **Supplier Inventory APIs** (GDS for flights, hotel inventory systems) — the platform's pricing
   and availability accuracy is only as good as these real-time feeds; a stale or delayed supplier
-  feed manifests as a booking-integrity defect even though the root cause is external
+  feed manifests as a booking-integrity defect even though the root cause is external. In the real
+  flight-booking industry, this supplier layer is dominated by three Global Distribution Systems —
+  **Amadeus**, **Sabre**, and **Travelport** — which together handle roughly 97% of GDS-mediated
+  airline bookings; a platform like this one typically integrates against one or more of them
+  rather than each individual airline directly. Airlines are also increasingly distributing richer
+  content (seat maps, bags, ancillaries) through IATA's **NDC (New Distribution Capability)**, an
+  XML standard that replaced the older EDIFACT messaging format — a real bank-adapter-style
+  integration layer (see [`architecture-and-flow.md`](./architecture-and-flow.md) section 1) needs
+  to account for both legacy and NDC-style supplier connections existing side by side, not assume
+  one uniform supplier API shape.
 - **Payment Gateway** — payment collection and refund processing
 
 ### Internal Platform Dependencies
@@ -87,7 +107,10 @@ traveler charged a stale price, or a confirmed booking that the supplier later c
 | **GDS (Global Distribution System)** | A supplier-side system aggregating flight inventory across airlines |
 | **Rate Parity** | The expectation that a supplier's price on the platform matches their price elsewhere |
 | **Refund Policy Tier** | Fare-type-specific rules determining how much (if anything) is refunded on cancellation |
-| **Overbooking** | More bookings confirmed for an inventory unit than actually exist |
+| **Overbooking (defect)** | More bookings confirmed for an inventory unit than actually exist, due to a race condition — distinct from *intentional* overbooking margins some airlines/hotels configure deliberately (see [`architecture-and-flow.md`](./architecture-and-flow.md) section 5) |
+| **NDC (New Distribution Capability)** | IATA's modern XML standard for airline content distribution — richer than the legacy EDIFACT format it's replacing, carrying ancillaries like seats and bags natively |
+| **Distributed Lock** | A short-lived lock (e.g., via Redis) that only one concurrent request can hold, used to serialize access to one inventory unit during fare-lock |
+| **Optimistic Concurrency Control** | A concurrency pattern using a version/CAS field instead of an explicit lock — an update only succeeds if the version still matches what was last read; a losing concurrent request simply fails cleanly |
 
 ## 8. Cross-Module Dependencies
 

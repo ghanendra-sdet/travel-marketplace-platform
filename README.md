@@ -30,9 +30,12 @@
 9. [Screenshots & Reports](#-screenshots--reports)
 10. [Repository Structure](#-repository-structure)
 
-> Deeper dives not covered inline in this README: [Stakeholders & Dependencies](./docs/business-overview.md),
-> [Architecture & Flow](./docs/architecture-and-flow.md), [UI Consistency](./docs/ui-consistency.md)
-> — see [`docs/README.md`](./docs/README.md) for the full map.
+> Deeper dives not covered inline in this README: [Modules, Submodules & Stakeholders](./docs/business-overview.md),
+> [Architecture, Flow & Real Sequence Diagrams](./docs/architecture-and-flow.md),
+> [Full Tech Stack & Skills Demonstrated](./docs/tech-and-skills.md), [UI Consistency](./docs/ui-consistency.md)
+> — see [`docs/README.md`](./docs/README.md) for the full map. **Every diagram in this repo is
+> drawn in Mermaid and renders natively right here on GitHub — nothing requires visiting another
+> site.**
 
 ---
 
@@ -89,10 +92,14 @@ test coverage across search accuracy, fare-lock integrity, and overbooking preve
 | Category | Tools |
 |---|---|
 | **UI Automation** | Cypress, JavaScript |
-| **API Testing** | Postman |
+| **API Testing & Automation** | Postman, Cypress `cy.intercept`-based contract assertions |
 | **Performance/Concurrency Testing** | k6 |
 | **Bug Tracking** | JIRA |
 | **Version Control** | Git, GitHub |
+
+> Full detail on *why* each tool was chosen for this specific product's risk profile, plus a
+> skill → proof map and the performance/concurrency testing approach in depth:
+> [`docs/tech-and-skills.md`](./docs/tech-and-skills.md).
 
 ---
 
@@ -103,8 +110,13 @@ test coverage across search accuracy, fare-lock integrity, and overbooking preve
 - **API Testing** — search responses, fare-lock payloads, booking confirmations
 - **Negative Testing** — supplier timeout during search, stale price at payment time, expired
   fare lock
-- **Concurrency Testing** — simultaneous booking attempts on the same limited inventory unit
-- **Performance/Load Testing** (where applicable)
+- **Concurrency Testing** — simultaneous booking attempts on the same limited inventory unit,
+  validated with k6 (see [`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md)
+  section 5 for the exact race condition, and
+  [`docs/tech-and-skills.md`](./docs/tech-and-skills.md) section 5 for load/spike/soak testing
+  applied to this specific product)
+- **Performance/Load Testing** — search-traffic load and spike scenarios (booking demand is
+  notably bursty — fare-drop alerts and seasonal surges)
 - **Cross-Browser Testing**
 - **Smoke & Sanity Testing** — post-deployment health checks
 
@@ -112,35 +124,25 @@ test coverage across search accuracy, fare-lock integrity, and overbooking preve
 
 ## 🔄 How It Works — Search-to-Booking Flow
 
-```
-Search (traveler searches flights/hotels/packages with filters)
-      │
-      ▼
-Live query to Supplier Inventory APIs (GDS / hotel systems)
-      │
-      ├──▶ Supplier timeout/error ──▶ Clear error shown, no stale results treated as current
-      │
-      ▼
-Selection (traveler picks an option; price/availability shown as of that moment)
-      │
-      ▼
-Fare Lock / Hold (price + inventory unit reserved for a short window)
-      │
-      ├──▶ Payment within the hold window ──▶ Charged price == fare-locked price
-      │
-      └──▶ Hold window expires ──▶ Payment blocked, traveler must re-search
-      │
-      ▼
-Booking Confirmation (PNR/booking reference generated)
-      │
-      ▼
-Itinerary (view, manage, or cancel — cancellation triggers the Refund Policy Engine)
+```mermaid
+flowchart TD
+    A["Search<br/>traveler searches flights/hotels/packages with filters"] --> B["Live query to<br/>Supplier Inventory APIs (GDS / hotel systems)"]
+    B -->|timeout/error| B1["Clear error shown —<br/>no stale results ever treated as current"]
+    B --> C["Selection<br/>traveler picks an option; price/availability shown as of that moment"]
+    C --> D["Fare Lock / Hold<br/>price + inventory unit reserved for a short window"]
+    D -->|payment within the hold window| E["Charged price == fare-locked price"]
+    D -->|hold window expires| F["Payment blocked — traveler must re-search"]
+    E --> G["Booking Confirmation<br/>PNR/booking reference generated"]
+    G --> H["Itinerary<br/>view, manage, or cancel — cancellation triggers the Refund Policy Engine"]
 ```
 
 **Key testing principle:** the amount charged at payment time must always match the fare-locked
 price shown at selection time, and only one traveler can ever successfully confirm a booking
 against a given limited inventory unit — see
-[`docs/business-overview.md`](./docs/business-overview.md) section 4 for the full rationale.
+[`docs/business-overview.md`](./docs/business-overview.md) section 4 for the full rationale, and
+[`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md) for the full set of sequence
+diagrams (search, fare-lock, payment, the overbooking race condition itself, and
+cancellation/refund) showing exactly how each step is enforced.
 
 ### Admin Functions
 
@@ -216,8 +218,9 @@ travel-marketplace-platform/
 ├── regression-execution-summary.md  → Sample regression test execution report
 ├── docs/
 │   ├── README.md                    → 📍 Documentation map — start here
-│   ├── business-overview.md         → What this is, stakeholders, dependencies, glossary, price-integrity risk model
-│   ├── architecture-and-flow.md     → Search-to-booking + cancellation/refund flow diagrams
+│   ├── business-overview.md         → What this is, modules/submodules, stakeholders, dependencies, glossary, price-integrity risk model
+│   ├── architecture-and-flow.md     → Real Mermaid sequence/flow diagrams: search, fare-lock, payment, overbooking race condition, cancellation/refund
+│   ├── tech-and-skills.md           → Full tech stack (with why), skill → proof map, testing pyramid, CI/CD shape, performance/concurrency depth
 │   └── ui-consistency.md            → Cross-screen UI/UX consistency (booking status, price formatting, a11y)
 └── automation/
     ├── README.md                    → Framework setup & structure

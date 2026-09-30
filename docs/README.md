@@ -8,8 +8,11 @@
 | What is this, in plain terms? | [`business-overview.md`](./business-overview.md) sections 1–2 |
 | Who's involved / stakeholders? | [`business-overview.md`](./business-overview.md) section 5 |
 | What does it depend on? | [`business-overview.md`](./business-overview.md) section 6 |
-| How does search-to-booking actually work — tech flow? | [`architecture-and-flow.md`](./architecture-and-flow.md) |
+| How does search-to-booking actually work — tech flow, with real sequence diagrams? | [`architecture-and-flow.md`](./architecture-and-flow.md) |
 | What's the highest-risk testing theme? | [`business-overview.md`](./business-overview.md) section 4 (price/availability integrity) |
+| What are the modules and submodules? | [`business-overview.md`](./business-overview.md) section 2 |
+| What tech was used, and what skills does this repo demonstrate? | [`tech-and-skills.md`](./tech-and-skills.md) |
+| How does overbooking prevention actually work under the hood (locking/concurrency)? | [`architecture-and-flow.md`](./architecture-and-flow.md) section 5 |
 | What does the UI need to get right, consistently? | [`ui-consistency.md`](./ui-consistency.md) |
 | What's tested? | [`../regression-checklist.md`](../regression-checklist.md) |
 | What's automated? | [`../automation/README.md`](../automation/README.md) |
@@ -35,10 +38,13 @@
 README.md (repo root)
       │
       ▼
-docs/business-overview.md      ← what this is, price/availability integrity risk, stakeholders
+docs/business-overview.md      ← what this is, modules/submodules, price/availability integrity risk, stakeholders
       │
       ▼
-docs/architecture-and-flow.md  ← search-to-booking + cancellation/refund flow, overbooking risk
+docs/architecture-and-flow.md  ← search-to-booking + cancellation/refund flow, overbooking risk,
+      │                            with real Mermaid sequence diagrams
+      ▼
+docs/tech-and-skills.md        ← full tech stack, skill → proof map, CI/CD shape, performance testing depth
       │
       ▼
 docs/ui-consistency.md         ← fare-lock and booking-status UI consistency
