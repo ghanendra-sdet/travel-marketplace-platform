@@ -4,7 +4,7 @@
 > sections 2–3 (fare lock/booking + overbooking prevention). See
 > [`../docs/README.md`](../docs/README.md) for the full documentation map,
 > [`../docs/architecture-and-flow.md`](../docs/architecture-and-flow.md) section 5 for the exact
-> race condition the k6 script below is built to catch (with a full sequence diagram), and
+> race condition the k6 script below is built to catch, with a full sequence diagram, and
 > [`../docs/tech-and-skills.md`](../docs/tech-and-skills.md) section 5 for a worked, illustrative
 > version of that k6 script plus the full load/spike/soak testing approach.
 
@@ -15,9 +15,9 @@ Postman API coverage and k6 for load/concurrency scenarios.
 
 - Cypress covers the UI-heavy search, selection, and payment flows
 - Postman covers API-level fare-lock and booking-confirmation validation
-- **k6** specifically exists to simulate the concurrent-booking race condition (two requests for
-  the same inventory unit within milliseconds) that a standard UI test tool can't reliably
-  reproduce — see [`../docs/architecture-and-flow.md`](../docs/architecture-and-flow.md) for why
+- **k6** exists specifically to simulate the concurrent-booking race condition — two requests for
+  the same inventory unit within milliseconds — that a standard UI test tool can't reliably
+  reproduce. See [`../docs/architecture-and-flow.md`](../docs/architecture-and-flow.md) for why
   overbooking prevention is a concurrency-testing problem
 
 ## Suggested Project Structure
@@ -41,9 +41,9 @@ automation/
 
 ## Test Data Policy
 
-All automation uses **dummy data only**: dummy routes, dates, and hotel/flight inventory —
-mocked supplier responses (including simulated timeouts and stale-price scenarios) rather than
-hitting any real supplier.
+All automation uses dummy data only: dummy routes, dates, and hotel/flight inventory, with mocked
+supplier responses (including simulated timeouts and stale-price scenarios) rather than hitting
+any real supplier.
 
 ## Priority Automated Scenarios
 

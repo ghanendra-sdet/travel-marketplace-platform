@@ -16,7 +16,12 @@ describe('Travel Marketplace — Search, Fare Lock & Booking Flow', () => {
     cy.visit('/search');
   });
 
-  it('returns results matching the applied filters', () => {
+  /**
+   * Every test below needs a searched, rendered result to interact with -
+   * each `it()` gets a fresh page via beforeEach, so this has to run inside
+   * every test that touches `result-FLT-001`, not just the first one.
+   */
+  function searchAndGetResult() {
     cy.intercept('GET', '/api/search*', {
       statusCode: 200,
       body: { results: [{ id: 'FLT-001', price: 4599, currency: 'INR' }] },
@@ -28,7 +33,11 @@ describe('Travel Marketplace — Search, Fare Lock & Booking Flow', () => {
     cy.get('[data-testid="search-btn"]').click();
 
     cy.wait('@searchResults');
-    cy.get('[data-testid="result-FLT-001"]').should('contain.text', '4599');
+    return cy.get('[data-testid="result-FLT-001"]');
+  }
+
+  it('returns results matching the applied filters', () => {
+    searchAndGetResult().should('contain.text', '4599');
   });
 
   it('triggers a fare lock on selection, showing Price Held', () => {
@@ -37,7 +46,7 @@ describe('Travel Marketplace — Search, Fare Lock & Booking Flow', () => {
       body: { status: 'PRICE_HELD', price: 4599, holdExpiresInSeconds: 600 },
     }).as('fareLock');
 
-    cy.get('[data-testid="result-FLT-001"]').click();
+    searchAndGetResult().click();
     cy.wait('@fareLock');
 
     cy.get('[data-testid="booking-status"]').should('contain.text', 'Price Held');
@@ -49,7 +58,7 @@ describe('Travel Marketplace — Search, Fare Lock & Booking Flow', () => {
       body: { error: 'FARE_LOCK_EXPIRED', message: 'Price expired — please re-search' },
     }).as('expiredPayment');
 
-    cy.get('[data-testid="result-FLT-001"]').click();
+    searchAndGetResult().click();
     // Simulate the hold window elapsing before payment is attempted.
     cy.get('[data-testid="pay-btn"]').click();
 
@@ -65,7 +74,7 @@ describe('Travel Marketplace — Search, Fare Lock & Booking Flow', () => {
       req.reply({ statusCode: 409, body: { error: 'INVENTORY_NO_LONGER_AVAILABLE' } });
     }).as('secondBookingAttempt');
 
-    cy.get('[data-testid="result-FLT-001"]').click();
+    searchAndGetResult().click();
     cy.get('[data-testid="pay-btn"]').click();
 
     cy.wait('@secondBookingAttempt');
