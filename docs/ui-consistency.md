@@ -34,7 +34,7 @@ whether a traveler trusts the platform enough to complete payment.
 
 Per the glossary in [`business-overview.md`](./business-overview.md), watch for drift on:
 
-- "PNR" vs. "Booking Reference" vs. "Confirmation Number" used interchangeably for the same
+- "PNR" vs. "Booking Reference" vs. "Confirmation Number," used interchangeably for the same
   concept
 - "Fare Lock" vs. "Price Hold" vs. "Reservation Hold" as different labels for the same mechanism
 - "Refund" vs. "Cancellation Credit" as different labels for the same outcome
@@ -44,9 +44,9 @@ Per the glossary in [`business-overview.md`](./business-overview.md), watch for 
 Per [`architecture-and-flow.md`](./architecture-and-flow.md), a fare lock has a limited window.
 This introduces its own consistency requirement:
 
-- If a countdown timer is shown, it must reflect the platform's actual hold-expiry time exactly —
-  never a cosmetic timer that drifts from the real enforcement deadline
-- The price shown during the hold must never silently change; if it must change, the traveler
+- If a countdown timer is shown, it has to reflect the platform's actual hold-expiry time exactly
+  — never a cosmetic timer that drifts from the real enforcement deadline
+- The price shown during the hold must never silently change; if it has to change, the traveler
   needs an explicit, unmissable notice, not a quiet update
 
 ## 5. Empty States & Error Messages
