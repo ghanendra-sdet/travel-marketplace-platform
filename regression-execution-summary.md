@@ -33,11 +33,11 @@
 
 ## Conclusion
 
-The regression cycle's most valuable finding was in Overbooking Prevention — exactly where this
-module's QA strategy places the most weight per
-[`docs/business-overview.md`](./docs/business-overview.md) section 4. A critical concurrent
-double-booking defect was caught before release, directly validating why overbooking prevention
-is treated as a concurrency-correctness test category rather than a standard functional check.
+This cycle's most valuable finding was in Overbooking Prevention — exactly where this module's QA
+strategy places the most weight, per [`docs/business-overview.md`](./docs/business-overview.md)
+section 4. A critical concurrent double-booking defect was caught before release, directly
+validating why overbooking prevention is treated as a concurrency-correctness test category rather
+than a standard functional check.
 
 **See also:** [`docs/business-overview.md`](./docs/business-overview.md) section 4 for the
 price/availability-integrity framing behind this test structure, and

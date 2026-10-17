@@ -1,7 +1,7 @@
 # Sample Defect Report — Travel Marketplace Platform
 
 > Template + worked examples using dummy data. Reflects the price/availability-integrity defect
-> theme that is the primary risk area for this module — see
+> theme that's the primary risk area for this module — see
 > [`docs/business-overview.md`](./docs/business-overview.md) section 4 for why, and
 > [`docs/README.md`](./docs/README.md) for the full documentation map.
 
@@ -23,24 +23,24 @@
 3. Both complete payment
 
 **Expected Result**
-Per [`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md), the Fare Lock/Hold
-Service must ensure only one traveler can successfully hold and pay for a given inventory unit —
-the second attempt should see "no longer available" immediately upon selection.
+Per [`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md), the Fare Lock/Hold Service
+must ensure only one traveler can successfully hold and pay for a given inventory unit — the
+second attempt should see "no longer available" immediately upon selection.
 
 **Actual Result**
 Both Traveler A and Traveler B receive a confirmed booking and PNR for the same room — the fare
-lock check happens only at initial selection, not re-verified atomically at payment completion,
-so two concurrent holds can both proceed to confirmation.
+lock check happens only at initial selection, not re-verified atomically at payment completion, so
+two concurrent holds can both proceed to confirmation.
 
 **Impact**
-A confirmed booking the supplier cannot actually honor — a severe customer-trust and potential
+A confirmed booking the supplier can't actually honor — a severe customer-trust and potential
 liability issue (compensation, rebooking costs) for a defect class this product should be
 architected to make structurally impossible.
 
 **Suggested Fix**
-Make the fare-lock-to-confirmation sequence atomic at the inventory-unit level (e.g. a
-database-level lock or optimistic-concurrency check at confirmation time), not just an
-initial-selection-time check.
+Make the fare-lock-to-confirmation sequence atomic at the inventory-unit level (a database-level
+lock, or an optimistic-concurrency check at confirmation time), not just an initial-selection-time
+check.
 
 ---
 
@@ -65,8 +65,7 @@ hold expiry should be blocked, forcing a re-search for the current price.
 
 **Actual Result**
 Payment succeeds at the original, now-stale price — the expiry check only runs client-side (a
-countdown timer) and isn't independently enforced server-side at the moment payment is
-submitted.
+countdown timer) and isn't independently enforced server-side at the moment payment is submitted.
 
 **Impact**
 The platform may honor a fare that no longer reflects real supplier pricing, creating a
